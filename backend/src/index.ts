@@ -6,13 +6,13 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { initChatSocket } from './features/chat/socket';
 
-export let io: Server | null = null;
+import { setIO } from './socketInstance';
 
 if (!process.env.VERCEL) {
   const httpServer = createServer(app);
 
   // Initialize Socket.io Server
-  io = new Server(httpServer, {
+  const ioServer = new Server(httpServer, {
     cors: {
       origin: true,
       methods: ['GET', 'POST'],
@@ -20,8 +20,10 @@ if (!process.env.VERCEL) {
     },
   });
 
+  setIO(ioServer);
+
   // Configure General Chat Socket Actions
-  initChatSocket(io);
+  initChatSocket(ioServer);
 
   const startServer = async () => {
     try {

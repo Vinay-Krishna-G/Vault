@@ -3,7 +3,7 @@ import { ResourceService } from './service';
 import { AuthRequest } from '../../middleware/auth';
 import { AppError } from '../../utils/AppError';
 import type { SortOption, FileTypeFilter } from './service';
-import { io } from '../../index';
+import { io } from '../../socketInstance';
 import { Room } from '../rooms/model';
 import { BackendPermissions } from '../../utils/permissions';
 
