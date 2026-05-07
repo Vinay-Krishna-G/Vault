@@ -40,8 +40,11 @@ app.get('/api/health', (_req, res) => {
   res.status(200).json({ success: true, message: 'Server is healthy', data: null });
 });
 
-// Connect to database on every serverless function invocation
-app.use(async (_req, _res, next) => {
+// Connect to database on every serverless function invocation (except OPTIONS preflights)
+app.use(async (req, _res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
   try {
     await connectDB();
     next();

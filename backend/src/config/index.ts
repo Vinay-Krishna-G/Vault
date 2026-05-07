@@ -5,15 +5,16 @@ dotenv.config();
 if (!process.env.JWT_SECRET) {
   throw new Error('FATAL: JWT_SECRET environment variable is not set. Server cannot start.');
 }
-if (!process.env.MONGO_URI) {
-  throw new Error('FATAL: MONGO_URI environment variable is not set. Server cannot start.');
+const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+if (!mongoUri) {
+  throw new Error('FATAL: MONGO_URI or MONGODB_URI environment variable is not set. Server cannot start.');
 }
 
 export const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '5001', 10),
   db: {
-    uri: process.env.MONGO_URI,
+    uri: mongoUri,
   },
   jwt: {
     secret: process.env.JWT_SECRET, // Guaranteed non-null by guard above
