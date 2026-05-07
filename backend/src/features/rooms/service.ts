@@ -54,6 +54,15 @@ export const RoomService = {
       throw new AppError('Invalid join code', 404);
     }
 
+    if (room.isArchived) {
+      throw new AppError('This room is archived and cannot be joined.', 400);
+    }
+
+    const maxLimit = room.maxMembers || 100;
+    if (room.members.length >= maxLimit) {
+      throw new AppError(`Room has reached its maximum capacity of ${maxLimit} members.`, 400);
+    }
+
     const isMember = room.members.some(
       (m) => m.user.toString() === userId.toString()
     );
@@ -67,6 +76,7 @@ export const RoomService = {
       role: 'member',
     } as any); // Cast as any to bypass mongoose array types loosely for push
 
+    room.lastActivityAt = new Date();
     await room.save();
 
     // Return populated room

@@ -26,4 +26,5 @@ export type CreateResourceDTO = {
   file: Express.Multer.File;
   roomId: string;
   uploaderId: string;
+  color?: string;
 };

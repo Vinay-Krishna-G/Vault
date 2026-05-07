@@ -7,8 +7,10 @@ import authRoutes from './features/auth/routes';
 import roomRoutes from './features/rooms/routes';
 import resourceRoutes from './features/resources/routes';
 import commentRoutes from './features/comments/routes';
+import chatRoutes from './features/chat/routes';
 
 const app = express();
+
 
 // Security Middlewares
 app.use(helmet());
@@ -41,6 +43,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

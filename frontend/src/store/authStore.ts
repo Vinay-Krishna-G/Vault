@@ -8,7 +8,11 @@ export interface AuthUser {
   email: string;
   profileIdentity: {
     avatar: string;
-    color: string;
+    avatarType?: string;
+    displayName?: string;
+    bio?: string;
+    themePreset?: 'purple' | 'blue' | 'green' | 'orange' | 'pink' | 'cyber' | 'academic' | 'dark-minimal';
+    themePreference?: 'light' | 'dark' | 'system';
   };
   roles: string[];
 }
@@ -22,7 +26,7 @@ interface RegisterDTO {
   username: string;
   email: string;
   password: string;
-  profileIdentity: { avatar: string; color: string };
+  profileIdentity: { avatar: string; avatarType?: string; displayName?: string; color?: string; themePreset?: string };
 }
 
 interface AuthState {
@@ -33,6 +37,14 @@ interface AuthState {
   error: string | null;
   login: (data: LoginDTO) => Promise<void>;
   register: (data: RegisterDTO) => Promise<void>;
+  updateProfile: (data: {
+    displayName?: string;
+    bio?: string;
+    avatar?: string;
+    avatarType?: string;
+    themePreset?: string;
+    themePreference?: string;
+  }) => Promise<void>;
   logout: () => void;
   clearError: () => void;
 }
@@ -73,6 +85,19 @@ export const useAuthStore = create<AuthState>()(
           const msg = error instanceof Error
             ? (error as any).response?.data?.message || error.message
             : 'Registration failed';
+          set({ error: msg, isLoading: false });
+          throw error;
+        }
+      },
+
+      updateProfile: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await api.put('/auth/profile', data);
+          const { user } = response.data.data;
+          set({ user, isLoading: false });
+        } catch (error: any) {
+          const msg = error.response?.data?.message || error.message || 'Failed to update profile';
           set({ error: msg, isLoading: false });
           throw error;
         }

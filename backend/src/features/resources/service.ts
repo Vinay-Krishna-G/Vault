@@ -4,12 +4,12 @@ import { AppError } from '../../utils/AppError';
 import cloudinary from '../../config/cloudinary';
 
 export type SortOption = 'newest' | 'oldest' | 'most_reacted' | 'pinned';
-export type FileTypeFilter = 'all' | 'pdf' | 'image';
+export type FileTypeFilter = 'all' | 'pdf' | 'image' | 'text-note' | 'question' | 'task' | 'announcement';
 
 export interface SearchResourcesQuery {
   roomId: string;
   q?: string;              // Full-text search query
-  type?: FileTypeFilter;   // Filter by file type
+  type?: FileTypeFilter;   // Filter by file/card type
   pinned?: boolean;        // Only show pinned resources
   sort?: SortOption;       // Sort order
 }
@@ -23,17 +23,43 @@ export const ResourceService = {
     const newResource = await Resource.create({
       title: dto.title,
       description: dto.description || '',
+      type: 'file',
       url: dto.file.path,
       publicId: dto.file.filename,
       fileType: dto.file.mimetype === 'application/pdf' ? 'pdf' : 'image',
       mimeType: dto.file.mimetype,
       fileSize: dto.file.size,
+      cardTheme: (dto.color || 'purple') as any,
       tags: dto.tags || [],
       room: dto.roomId,
       uploader: dto.uploaderId,
     });
 
-    return await newResource.populate('uploader', UPLOADER_POPULATE);
+    return await (newResource as any).populate('uploader', UPLOADER_POPULATE);
+  },
+
+  async createTextCard(dto: {
+    title: string;
+    description?: string;
+    type: 'text-note' | 'question' | 'task' | 'announcement';
+    content: string;
+    color?: string;
+    tags?: string[];
+    roomId: string;
+    uploaderId: string;
+  }) {
+    const newResource = await Resource.create({
+      title: dto.title,
+      description: dto.description || '',
+      type: dto.type,
+      content: dto.content,
+      cardTheme: (dto.color || 'purple') as any,
+      tags: dto.tags || [],
+      room: dto.roomId,
+      uploader: dto.uploaderId,
+      fileType: 'none',
+    });
+    return await (newResource as any).populate('uploader', UPLOADER_POPULATE);
   },
 
   // ─── Search & Filter ────────────────────────────────────────────────────
@@ -43,7 +69,14 @@ export const ResourceService = {
     // Build filter object
     const filter: Record<string, unknown> = { room: roomId, isDeleted: false };
 
-    if (type && type !== 'all') filter.fileType = type;
+    if (type && type !== 'all') {
+      if (type === 'pdf' || type === 'image') {
+        filter.fileType = type;
+        filter.type = 'file';
+      } else {
+        filter.type = type;
+      }
+    }
     if (pinned === true) filter.isPinned = true;
 
     // Build MongoDB query
@@ -61,7 +94,6 @@ export const ResourceService = {
         dbQuery = dbQuery.sort({ isPinned: -1, createdAt: 1 });
         break;
       case 'most_reacted':
-        // Sort by size of reactions array descending, then newest
         dbQuery = dbQuery.sort({ isPinned: -1, 'reactions.length': -1, createdAt: -1 });
         break;
       case 'pinned':
@@ -90,7 +122,6 @@ export const ResourceService = {
     const resource = await Resource.findById(resourceId);
     if (!resource || resource.isDeleted) throw new AppError('Resource not found', 404);
 
-    // Only uploader or room admin can pin (room admin check done in middleware)
     resource.isPinned = !resource.isPinned;
     await resource.save();
     return await resource.populate('uploader', UPLOADER_POPULATE);
@@ -101,14 +132,64 @@ export const ResourceService = {
     const resource = await Resource.findById(resourceId);
     if (!resource || resource.isDeleted) throw new AppError('Resource not found', 404);
 
-    try {
-      const resourceType = resource.fileType === 'pdf' ? 'raw' : 'image';
-      await cloudinary.v2.uploader.destroy(resource.publicId, { resource_type: resourceType });
-    } catch (err) {
-      console.error('Cloudinary deletion failed:', err);
+    if (resource.type === 'file' && resource.publicId) {
+      try {
+        const resourceType = resource.fileType === 'pdf' ? 'raw' : 'image';
+        await cloudinary.v2.uploader.destroy(resource.publicId, { resource_type: resourceType });
+      } catch (err) {
+        console.error('Cloudinary deletion failed:', err);
+      }
     }
 
     await resource.deleteOne();
     return { success: true };
+  },
+
+  async toggleReaction(resourceId: string, userId: string, type: '🔥' | '🧠' | '📌' | '✅') {
+    const resource = await Resource.findById(resourceId);
+    if (!resource || resource.isDeleted) throw new AppError('Resource not found', 404);
+
+    const existingIndex = resource.reactions.findIndex(
+      (r) => r.user.toString() === userId
+    );
+
+    if (existingIndex > -1) {
+      const existingReaction = resource.reactions[existingIndex];
+      if (existingReaction.type === type) {
+        resource.reactions.splice(existingIndex, 1);
+      } else {
+        existingReaction.type = type;
+      }
+    } else {
+      resource.reactions.push({ user: userId as any, type });
+    }
+
+    await resource.save();
+    return await resource.populate('uploader', UPLOADER_POPULATE);
+  },
+
+  async updateResource(resourceId: string, userId: string, updateData: { title?: string; description?: string; content?: string; color?: string; tags?: string[] }) {
+    const resource = await Resource.findById(resourceId);
+    if (!resource || resource.isDeleted) throw new AppError('Resource not found', 404);
+
+    if (resource.uploader.toString() !== userId) {
+      throw new AppError('Only the creator can edit this resource card', 403);
+    }
+
+    const createdAt = new Date(resource.createdAt);
+    const now = new Date();
+    const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+    if (diffMinutes > 15) {
+      throw new AppError('Editing window has expired. Cards can only be edited within 15 minutes of creation.', 400);
+    }
+
+    if (updateData.title !== undefined) resource.title = updateData.title;
+    if (updateData.description !== undefined) resource.description = updateData.description;
+    if (updateData.content !== undefined) resource.content = updateData.content;
+    if (updateData.color !== undefined) resource.set('cardTheme', updateData.color);
+    if (updateData.tags !== undefined) resource.tags = updateData.tags;
+
+    await resource.save();
+    return await resource.populate('uploader', UPLOADER_POPULATE);
   },
 };

@@ -48,10 +48,10 @@ export const requireResourceOwnerOrAdmin = async (req: AuthRequest, _res: Respon
     // Check if user is room owner/admin
     const room = resource.room as any; // Populated
     const memberRecord = room.members.find((m: any) => m.user.toString() === req.user._id.toString());
-    const isRoomAdmin = memberRecord && (memberRecord.role === 'owner' || memberRecord.role === 'admin');
+    const isRoomOwner = memberRecord && memberRecord.role === 'owner';
 
-    if (!isResourceOwner && !isRoomAdmin) {
-      return next(new AppError('Only the uploader or room admins can modify this resource', 403));
+    if (!isResourceOwner && !isRoomOwner) {
+      return next(new AppError('Only the creator or room owner can modify this resource', 403));
     }
 
     // Attach resource to request

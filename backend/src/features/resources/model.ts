@@ -14,26 +14,38 @@ const ResourceSchema = new Schema(
       maxlength: 500,
       default: '',
     },
+    type: {
+      type: String,
+      enum: ['file', 'text-note', 'question', 'task', 'announcement'],
+      default: 'file',
+      required: true,
+    },
+    content: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     url: {
       type: String,
-      required: true, // Cloudinary URL
+      required: false, // Optional for text cards
     },
     publicId: {
       type: String,
-      required: true, // Cloudinary public_id for deletion
+      required: false, // Optional for text cards
     },
     fileType: {
       type: String,
-      enum: ['pdf', 'image'],
+      enum: ['pdf', 'image', 'none'],
+      default: 'none',
       required: true,
     },
     mimeType: {
       type: String,
-      required: true,
+      required: false,
     },
     fileSize: {
       type: Number,
-      required: true,
+      required: false,
     },
     tags: {
       type: [String],
@@ -53,13 +65,18 @@ const ResourceSchema = new Schema(
       ref: 'User',
       required: true,
     },
+    cardTheme: {
+      type: String,
+      enum: ['default', 'neutral', 'purple', 'blue', 'green', 'orange', 'red', 'yellow', 'dark', 'amber', 'rose', 'emerald'],
+      default: 'default',
+    },
     // Reactions on Resources
     reactions: [
       {
         user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         type: {
           type: String,
-          enum: ['🔥', '🧠', '📌', '✅'],
+          enum: ['🔥', '🧠', '📌', '✅', '😂', '👍'],
           required: true,
         },
       },
@@ -78,7 +95,8 @@ const ResourceSchema = new Schema(
 );
 
 // Indexes for performance (Sorting, Search, Scalability)
+ResourceSchema.index({ room: 1, type: 1, createdAt: -1 });
 ResourceSchema.index({ room: 1, createdAt: -1 });
-ResourceSchema.index({ title: 'text', description: 'text', tags: 'text' });
+ResourceSchema.index({ title: 'text', description: 'text', content: 'text', tags: 'text' });
 
 export const Resource = mongoose.model('Resource', ResourceSchema);

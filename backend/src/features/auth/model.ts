@@ -28,10 +28,30 @@ const UserSchema = new Schema(
         required: true,
         default: '🐼',
       },
-      color: {
-        type: String, // Hex color code
-        required: true,
-        default: '#aa3bff',
+      avatarType: {
+        type: String,
+        enum: ['emoji', 'animal', 'symbol', 'initials'],
+        default: 'emoji',
+      },
+      displayName: {
+        type: String,
+        maxlength: 30,
+        default: '',
+      },
+      bio: {
+        type: String,
+        maxlength: 150,
+        default: '',
+      },
+      themePreset: {
+        type: String,
+        enum: ['purple', 'blue', 'green', 'orange', 'pink', 'cyber', 'academic', 'dark-minimal'],
+        default: 'purple',
+      },
+      themePreference: {
+        type: String,
+        enum: ['light', 'dark', 'system'],
+        default: 'system',
       },
     },
     roles: {

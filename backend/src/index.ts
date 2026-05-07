@@ -4,10 +4,11 @@ import { connectDB } from './config/db';
 import { logger } from './utils/logger';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { initChatSocket } from './features/chat/socket';
 
 const httpServer = createServer(app);
 
-// Temporary Socket.io setup (will be fully implemented in Phase 5)
+// Initialize Socket.io Server
 export const io = new Server(httpServer, {
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -16,13 +17,8 @@ export const io = new Server(httpServer, {
   },
 });
 
-io.on('connection', (socket) => {
-  logger.info(`Socket connected: ${socket.id}`);
-  
-  socket.on('disconnect', () => {
-    logger.info(`Socket disconnected: ${socket.id}`);
-  });
-});
+// Configure General Chat Socket Actions
+initChatSocket(io);
 
 const startServer = async () => {
   try {

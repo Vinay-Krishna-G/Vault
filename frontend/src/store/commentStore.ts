@@ -21,7 +21,8 @@ export interface Comment {
     username: string;
     profileIdentity: {
       avatar: string;
-      color: string;
+      color?: string;
+      themePreset?: string;
     };
   };
 }
@@ -104,7 +105,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
 
   deleteComment: async (commentId) => {
     try {
-      const res = await api.delete(`/comments/${commentId}`);
+      await api.delete(`/comments/${commentId}`);
       // Replace with soft-deleted version from server
       set({
         comments: get().comments.map((c) =>
@@ -131,7 +132,7 @@ export const useCommentStore = create<CommentState>((set, get) => ({
 
   toggleResourceReaction: async (resourceId, type) => {
     try {
-      const res = await api.post(`/comments/resource/${resourceId}/react`, { type });
+      await api.post(`/comments/resource/${resourceId}/react`, { type });
       // Update the resource in resourceStore if accessible — handled by ResourceBoard refetch
       // For now, just ensure no stale error
     } catch (error: unknown) {

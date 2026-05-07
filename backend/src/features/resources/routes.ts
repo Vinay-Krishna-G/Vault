@@ -49,4 +49,23 @@ router.delete(
   ResourceController.deleteResource as any
 );
 
+// Create a text card (text-note, question, task, announcement)
+router.post(
+  '/room/:roomId/text',
+  requireRoomMember as any,
+  ResourceController.createTextCard as any
+);
+
+// Toggle reaction on a resource
+router.post(
+  '/:resourceId/react',
+  ResourceController.toggleReaction as any
+);
+
+// Edit a resource card (creator only, 15 minutes limit checked in service)
+router.put(
+  '/:resourceId',
+  ResourceController.updateResource as any
+);
+
 export default router;

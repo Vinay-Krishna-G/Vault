@@ -45,7 +45,7 @@ function CommentItem({
         {/* Avatar */}
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 mt-0.5"
-          style={{ backgroundColor: comment.author.profileIdentity?.color || '#ccc' }}
+          style={{ backgroundColor: (comment.author.profileIdentity?.themePreset ? ({ purple: '#8b5cf6', blue: '#3b82f6', green: '#10b981', orange: '#f59e0b', pink: '#ec4899', cyber: '#06b6d4', academic: '#64748b', 'dark-minimal': '#1e293b' } as Record<string, string>)[comment.author.profileIdentity.themePreset] : undefined) || comment.author.profileIdentity?.color || '#8b5cf6' }}
         >
           {comment.author.profileIdentity?.avatar || '👤'}
         </div>
@@ -187,7 +187,7 @@ export default function CommentPanel({ resource, onClose }: CommentPanelProps) {
           <div className="flex-1 min-w-0 pr-2">
             <h3 className="font-bold text-foreground truncate">{resource.title}</h3>
             <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-              {resource.fileType} · {(resource.fileSize / 1024 / 1024).toFixed(2)} MB
+              {resource.fileType} · {resource.fileSize ? (resource.fileSize / 1024 / 1024).toFixed(2) : '0.00'} MB
             </p>
             {/* Resource Reactions */}
             <div className="flex gap-1 mt-2">
