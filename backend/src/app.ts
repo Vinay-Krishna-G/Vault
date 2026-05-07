@@ -13,13 +13,14 @@ import { connectDB } from './config/db';
 const app = express();
 
 
-// Security Middlewares
-app.use(helmet());
 app.use(cors({
   origin: true,
   credentials: true,
   optionsSuccessStatus: 200,
 }));
+
+// Security Middlewares
+app.use(helmet());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -29,7 +30,9 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api', limiter);
+if (!process.env.VERCEL) {
+  app.use('/api', limiter);
+}
 
 // Body parser
 app.use(express.json({ limit: '10kb' }));
