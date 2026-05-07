@@ -33,10 +33,10 @@ export const ResourceController = {
       room.lastActivityAt = new Date();
       await room.save();
 
-      io.to(req.params.roomId as string).emit('resource:created', { roomId: req.params.roomId, resource: result });
+      io?.to(req.params.roomId as string).emit('resource:created', { roomId: req.params.roomId, resource: result });
       
       // Emit notification alert
-      io.to(req.params.roomId as string).emit('notification:new', {
+      io?.to(req.params.roomId as string).emit('notification:new', {
         roomId: req.params.roomId,
         type: 'resource',
         resourceId: result._id,
@@ -109,10 +109,10 @@ export const ResourceController = {
       room.lastActivityAt = new Date();
       await room.save();
 
-      io.to(req.params.roomId as string).emit('resource:created', { roomId: req.params.roomId, resource: result });
+      io?.to(req.params.roomId as string).emit('resource:created', { roomId: req.params.roomId, resource: result });
 
       // Emit notification alert
-      io.to(req.params.roomId as string).emit('notification:new', {
+      io?.to(req.params.roomId as string).emit('notification:new', {
         roomId: req.params.roomId,
         type: 'resource',
         resourceId: result._id,
