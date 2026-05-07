@@ -18,6 +18,7 @@ app.use(helmet());
 app.use(cors({
   origin: true,
   credentials: true,
+  optionsSuccessStatus: 200,
 }));
 
 // Rate limiting
