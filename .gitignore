@@ -1,0 +1,22 @@
+# Root-level gitignore for StudyVault monorepo
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+
+# Don't commit any .env files from any nested directory
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Don't commit any node_modules
+**/node_modules/
+
+# Gemini AI working directory
+.gemini/
