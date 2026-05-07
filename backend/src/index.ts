@@ -39,4 +39,8 @@ process.on('unhandledRejection', (err: any) => {
   httpServer.close(() => process.exit(1));
 });
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;

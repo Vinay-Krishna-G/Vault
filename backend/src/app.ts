@@ -8,6 +8,7 @@ import roomRoutes from './features/rooms/routes';
 import resourceRoutes from './features/resources/routes';
 import commentRoutes from './features/comments/routes';
 import chatRoutes from './features/chat/routes';
+import { connectDB } from './config/db';
 
 const app = express();
 
@@ -36,6 +37,16 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // Health check route
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ success: true, message: 'Server is healthy', data: null });
+});
+
+// Connect to database on every serverless function invocation
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Feature Routes
