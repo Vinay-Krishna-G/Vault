@@ -2,6 +2,21 @@ import { Resource } from './model';
 import { CreateResourceDTO } from './validation';
 import { AppError } from '../../utils/AppError';
 import cloudinary from '../../config/cloudinary';
+import { Comment } from '../comments/model';
+
+async function injectCommentCounts(resources: any[]) {
+  if (resources.length === 0) return resources;
+  const resourceIds = resources.map(r => r._id);
+  const counts = await Comment.aggregate([
+    { $match: { resource: { $in: resourceIds }, isDeleted: false } },
+    { $group: { _id: '$resource', count: { $sum: 1 } } }
+  ]);
+  const countMap = new Map(counts.map(c => [c._id.toString(), c.count]));
+  return resources.map(r => {
+    const obj = r.toObject ? r.toObject() : r;
+    return { ...obj, commentCount: countMap.get(obj._id.toString()) || 0 };
+  });
+}
 
 export type SortOption = 'newest' | 'oldest' | 'most_reacted' | 'pinned';
 export type FileTypeFilter = 'all' | 'pdf' | 'image' | 'text-note' | 'question' | 'task' | 'announcement';
@@ -107,14 +122,16 @@ export const ResourceService = {
       dbQuery = dbQuery.sort({ score: { $meta: 'textScore' } });
     }
 
-    return await dbQuery.populate('uploader', UPLOADER_POPULATE);
+    const resources = await dbQuery.populate('uploader', UPLOADER_POPULATE);
+    return await injectCommentCounts(resources);
   },
 
   // ─── Basic list (non-search) ─────────────────────────────────────────
   async getRoomResources(roomId: string) {
-    return await Resource.find({ room: roomId, isDeleted: false })
+    const resources = await Resource.find({ room: roomId, isDeleted: false })
       .populate('uploader', UPLOADER_POPULATE)
       .sort({ isPinned: -1, createdAt: -1 });
+    return await injectCommentCounts(resources);
   },
 
   // ─── Pin/Unpin ───────────────────────────────────────────────────────

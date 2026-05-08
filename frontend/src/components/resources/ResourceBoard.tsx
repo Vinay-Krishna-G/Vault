@@ -254,9 +254,9 @@ export default function ResourceBoard() {
   return (
     <div className="flex-1 flex h-full bg-background overflow-hidden relative" onClick={() => setActiveReactionCardId(null)}>
       {/* Main Board Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b p-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="border-b p-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <span>{currentRoom.name}</span>
@@ -275,7 +275,7 @@ export default function ResourceBoard() {
         </div>
 
         {/* Search, Sort, Filter Bar */}
-        <div className="border-b bg-card/50 p-4 md:px-8 flex flex-col gap-3 md:flex-row md:items-center justify-between">
+        <div className="border-b bg-card/50 p-4 md:px-8 flex flex-col gap-3 md:flex-row md:items-center justify-between shrink-0">
           <div className="flex flex-1 flex-col sm:flex-row gap-2 max-w-3xl">
             {/* Search Input */}
             <div className="relative flex-1">
@@ -358,7 +358,7 @@ export default function ResourceBoard() {
         </div>
 
         {/* Grid */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+        <div className="p-4 md:p-8">
           {error && (
             <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-lg text-sm">{error}</div>
           )}
@@ -631,8 +631,8 @@ export default function ResourceBoard() {
                             📖 <span className="text-[10px] opacity-90 font-bold">view</span>
                           </span>
                         )}
-                        <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium" title="Click card to discuss">
-                          💬 <span className="text-[10px] opacity-75">discuss</span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium" title="Click card to view comments">
+                          💬 <span className="text-[11px] font-bold opacity-80">{resource.commentCount || 0}</span>
                         </span>
                       </div>
                     </div>

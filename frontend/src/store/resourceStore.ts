@@ -17,6 +17,7 @@ export interface Resource {
   tags: string[];
   isPinned: boolean;
   createdAt: string;
+  commentCount?: number;
   reactions: Array<{ user: string; type: '🔥' | '🧠' | '📌' | '✅' | '😂' | '👍' }>;
   uploader: {
     _id: string;

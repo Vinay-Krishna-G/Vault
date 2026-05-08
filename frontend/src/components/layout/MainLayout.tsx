@@ -37,7 +37,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   // Sidebar Layout States
   const [isSidebarPinned, setIsSidebarPinned] = useState(() => {
     const saved = localStorage.getItem('studyvault_sidebar_pinned');
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? JSON.parse(saved) : false;
   });
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -74,7 +74,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         >
           ☰
         </button>
-        <span className="font-bold text-sm tracking-tight">StudyVault</span>
+        <span className="font-bold text-sm tracking-tight cursor-pointer" onClick={() => { setCurrentRoom(null); setIsMobileOpen(false); }}>StudyVault</span>
         <div className="h-8 w-8 rounded-full flex items-center justify-center border text-sm" style={{ backgroundColor: AVATAR_COLOR_MAP[user?.profileIdentity?.themePreset || 'purple'] || (user?.profileIdentity as any)?.color || '#8b5cf6' }}>
           {user?.profileIdentity?.avatar || '🐼'}
         </div>
@@ -100,7 +100,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between px-4 mb-6">
-          <div className={`flex items-center gap-2 overflow-hidden ${isExpanded ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}>
+          <div 
+            className={`flex items-center gap-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${isExpanded ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}
+            onClick={() => setCurrentRoom(null)}
+          >
             <span className="text-xl">🎒</span>
             {isExpanded && (
               <h2 className="text-lg font-bold tracking-tight truncate">StudyVault</h2>
@@ -116,6 +119,33 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               {isSidebarPinned ? '📌' : '📍'}
             </button>
           )}
+        </div>
+
+        {/* Persistent Add / Join Room Button */}
+        <div className="px-2 mb-2 w-full shrink-0">
+          <button
+            onClick={() => {
+              setCurrentRoom(null);
+              setIsMobileOpen(false);
+            }}
+            className={`w-full flex items-center p-2 rounded-xl transition-all relative group ${
+              !currentRoom
+                ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+            }`}
+            title={!isExpanded ? 'Add Room' : undefined}
+          >
+             <div className="relative shrink-0">
+               <div className="h-10 w-10 rounded-xl flex items-center justify-center font-bold border border-dashed border-muted-foreground/40 group-hover:border-primary/50 text-xl bg-muted/20 group-hover:bg-primary/10 transition-colors">
+                 +
+               </div>
+             </div>
+             {isExpanded && (
+               <div className="ml-3 text-left overflow-hidden flex-1">
+                 <p className="font-semibold text-sm truncate leading-tight text-foreground">Add or Join</p>
+               </div>
+             )}
+          </button>
         </div>
 
         {/* Rooms Scroll List */}
@@ -191,32 +221,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               </button>
             );
           })}
-
-          {/* Add / Join Room Button */}
-          <button
-            onClick={() => {
-              setCurrentRoom(null);
-              setIsMobileOpen(false);
-            }}
-            className={`w-full flex items-center p-2 rounded-xl transition-all relative group ${
-              !currentRoom
-                ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
-            }`}
-            title={!isExpanded ? 'Add Room' : undefined}
-          >
-             <div className="relative shrink-0">
-               <div className="h-10 w-10 rounded-xl flex items-center justify-center font-bold border border-dashed border-muted-foreground/40 group-hover:border-primary/50 text-xl bg-muted/20 group-hover:bg-primary/10 transition-colors">
-                 +
-               </div>
-             </div>
-             {isExpanded && (
-               <div className="ml-3 text-left overflow-hidden flex-1">
-                 <p className="font-semibold text-sm truncate leading-tight text-foreground">Add or Join Room</p>
-               </div>
-             )}
-          </button>
         </div>
+
+
 
         {/* Theme switcher + User Profile Area */}
         <div className="mt-auto pt-4 border-t border-border px-4 w-full space-y-4">
