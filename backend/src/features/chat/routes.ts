@@ -10,6 +10,9 @@ router.use(protect as any);
 // Fetch paginated messages in a room
 router.get('/room/:roomId', requireRoomMember as any, ChatController.getRoomMessages as any);
 
+// Send a chat message (HTTP fallback for WebSockets)
+router.post('/room/:roomId', requireRoomMember as any, ChatController.sendMessage as any);
+
 // Edit a chat message
 router.put('/:messageId', ChatController.editMessage as any);
 

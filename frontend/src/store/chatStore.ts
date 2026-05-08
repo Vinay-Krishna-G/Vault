@@ -1,11 +1,10 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import api from '../lib/axios';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from './authStore';
 import { useRoomStore } from './roomStore';
 import { useResourceStore } from './resourceStore';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 
 export interface ChatMessage {
@@ -149,10 +148,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const beforeTimestamp = loadMore && messages.length > 0 ? messages[0].createdAt : undefined;
-      const token = useAuthStore.getState().token;
 
-      const response = await axios.get(`${API_URL}/chat/room/${roomId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get(`/chat/room/${roomId}`, {
         params: beforeTimestamp ? { before: beforeTimestamp } : {},
       });
 
@@ -171,43 +168,57 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  sendMessage: (roomId, content) => {
+  sendMessage: async (roomId, content) => {
     const { socket } = get();
-    if (socket) {
+    // Use WebSocket if connected
+    if (socket && socket.connected) {
       socket.emit('chat:message', { roomId, content });
+    } else {
+      // HTTP Fallback for Vercel/Serverless
+      try {
+        const response = await api.post(`/chat/room/${roomId}`, { content });
+        const newMessage = response.data.data;
+        set((state) => ({ messages: [...state.messages, newMessage] }));
+      } catch (err: any) {
+        console.error('Failed to send message via HTTP', err);
+      }
     }
   },
 
   startTyping: (roomId) => {
     const { socket } = get();
-    if (socket) {
+    if (socket && socket.connected) {
       socket.emit('chat:typing:start', { roomId });
     }
   },
 
   stopTyping: (roomId) => {
     const { socket } = get();
-    if (socket) {
+    if (socket && socket.connected) {
       socket.emit('chat:typing:stop', { roomId });
     }
   },
 
-  toggleReaction: (roomId, messageId, emoji) => {
+  toggleReaction: async (roomId, messageId, emoji) => {
     const { socket } = get();
-    if (socket) {
+    if (socket && socket.connected) {
       socket.emit('chat:reaction', { roomId, messageId, type: emoji });
+    } else {
+      try {
+        const response = await api.post(`/chat/${messageId}/react`, { type: emoji });
+        const updated = response.data.data;
+        set((state) => ({
+          messages: state.messages.map((m) => (m._id === messageId ? updated : m)),
+        }));
+      } catch (err) {
+        console.error('Failed to react via HTTP', err);
+      }
     }
   },
 
   editMessage: async (messageId, content) => {
     try {
-      const token = useAuthStore.getState().token;
-      const response = await axios.put(
-        `${API_URL}/chat/${messageId}`,
-        { content },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      const response = await api.put(`/chat/${messageId}`, { content });
       const updated: ChatMessage = response.data.data;
       set((state) => ({
         messages: state.messages.map((m) => (m._id === messageId ? updated : m)),

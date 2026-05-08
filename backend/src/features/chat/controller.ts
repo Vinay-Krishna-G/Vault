@@ -14,6 +14,24 @@ export const ChatController = {
     } catch (error) { next(error); }
   },
 
+  async sendMessage(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const roomId = req.params.roomId as string;
+      const { content } = req.body;
+      const senderId = req.user._id.toString();
+
+      const result = await ChatService.createMessage(roomId, senderId, content);
+      
+      // Attempt real-time broadcast if socket server is active
+      try {
+        const { getIO } = require('../../socketInstance');
+        getIO()?.to(`room:${roomId}`).emit('chat:message:new', result);
+      } catch (e) {}
+
+      res.status(201).json({ success: true, message: 'Message sent', data: result });
+    } catch (error) { next(error); }
+  },
+
   async editMessage(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const messageId = req.params.messageId as string;

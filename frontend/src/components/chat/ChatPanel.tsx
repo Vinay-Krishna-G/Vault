@@ -31,16 +31,24 @@ export default function ChatPanel() {
 
   // Connect sockets and fetch history on room load
   useEffect(() => {
+    let pollInterval: any;
+
     if (currentRoom) {
       clearStore();
       connectSocket(currentRoom._id);
       fetchHistory(currentRoom._id);
+
+      // HTTP Polling Fallback for Vercel
+      pollInterval = setInterval(() => {
+        fetchHistory(currentRoom._id);
+      }, 5000);
     }
 
     return () => {
       if (currentRoom) {
         disconnectSocket(currentRoom._id);
       }
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [currentRoom?._id, connectSocket, disconnectSocket, fetchHistory, clearStore]);
 
