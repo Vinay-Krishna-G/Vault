@@ -64,9 +64,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const isExpanded = isSidebarPinned || isHovered;
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden relative text-foreground">
+    <div className="flex flex-col md:flex-row h-screen w-full bg-background overflow-hidden relative text-foreground">
       {/* Mobile Top Header (only visible on small screens) */}
-      <div className="md:hidden sticky top-0 left-0 right-0 h-14 border-b border-border bg-card flex items-center justify-between px-4 z-40 w-full">
+      <div className="md:hidden sticky top-0 left-0 right-0 h-14 border-b border-border bg-card flex items-center justify-between px-4 z-40 w-full shrink-0">
         <button
           onClick={() => setIsMobileOpen(true)}
           className="p-1.5 rounded-lg border hover:bg-muted text-muted-foreground text-sm"
@@ -191,6 +191,31 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               </button>
             );
           })}
+
+          {/* Add / Join Room Button */}
+          <button
+            onClick={() => {
+              setCurrentRoom(null);
+              setIsMobileOpen(false);
+            }}
+            className={`w-full flex items-center p-2 rounded-xl transition-all relative group ${
+              !currentRoom
+                ? 'bg-primary/10 text-primary border border-primary/20 shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+            }`}
+            title={!isExpanded ? 'Add Room' : undefined}
+          >
+             <div className="relative shrink-0">
+               <div className="h-10 w-10 rounded-xl flex items-center justify-center font-bold border border-dashed border-muted-foreground/40 group-hover:border-primary/50 text-xl bg-muted/20 group-hover:bg-primary/10 transition-colors">
+                 +
+               </div>
+             </div>
+             {isExpanded && (
+               <div className="ml-3 text-left overflow-hidden flex-1">
+                 <p className="font-semibold text-sm truncate leading-tight text-foreground">Add or Join Room</p>
+               </div>
+             )}
+          </button>
         </div>
 
         {/* Theme switcher + User Profile Area */}
